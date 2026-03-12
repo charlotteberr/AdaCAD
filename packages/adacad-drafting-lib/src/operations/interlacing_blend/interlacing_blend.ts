@@ -237,7 +237,8 @@ const perform=(op_params:Array<OpParamVal>, op_inputs:Array<OpInput>)=>{
         drawdown[i][j]=createCell(cellValue);
       }
     }
-  }else{
+  }
+  else{
     const fullTileCount=Math.floor(verticalMiddleLength/commonH);
     const remainder=verticalMiddleLength%commonH;
     const leftFullTileCount=Math.floor(fullTileCount/2);
@@ -320,31 +321,38 @@ const perform=(op_params:Array<OpParamVal>, op_inputs:Array<OpInput>)=>{
   return Promise.resolve([{ draft }]);  // return it to AdaCAD
 };
 
-const generateName=(param_vals:Array<OpParamVal>, op_inputs:Array<OpInput>):string=>{  // name draft
-  const drafts=getAllDraftsAtInlet(op_inputs, 0).concat(getAllDraftsAtInlet(op_inputs, 1));
+const generateName=(param_vals:Array<OpParamVal>, op_inputs:Array<OpInput>):string=>{  // name draft, copied join left
+  const draftAInputs=getAllDraftsAtInlet(op_inputs, 0);
+  const draftBInputs=getAllDraftsAtInlet(op_inputs, 1);
+  const drafts=draftAInputs.concat(draftBInputs);
   const name_list=parseDraftNames(drafts);
   return "interlacing blend test(" + name_list + ")";
 };
 
-const sizeCheck=(op_params:Array<OpParamVal>, op_inputs:Array<OpInput>):boolean=>{ // neede sizecheck for operation
+const sizeCheck=(op_params:Array<OpParamVal>, op_inputs:Array<OpInput>):boolean=>{ // needed sizecheck for operation
+  
   const inputDraftA=getAllDraftsAtInlet(op_inputs, 0);
   const inputDraftB=getAllDraftsAtInlet(op_inputs, 1);
   let middleColumnCount=Math.floor(<number>getOpParamValById(0, op_params));
-  const changePatternSizeValue=Math.floor(<number>getOpParamValById(2, op_params));
+  if(middleColumnCount<0){
+    middleColumnCount=0;
+  }
+  let changePatternSizeValue=Math.floor(<number>getOpParamValById(2, op_params));
   let isVertical=false;
 
   if(<number>getOpParamValById(3, op_params)===1){
     isVertical=true;
   }
 
-  if(middleColumnCount<0)middleColumnCount=0;
-  if(inputDraftA.length===0 || inputDraftB.length===0)return true;
+  if(inputDraftA.length===0 || inputDraftB.length===0){
+    return true;
+  }
 
   let totalRows=0;
   let totalCols=0;
   const patternAOrg=inputDraftA[0];
   const patternBOrg=inputDraftB[0];
-  const { commonW, commonH }=getCommonSize(patternAOrg, patternBOrg, changePatternSizeValue);
+  const {commonW, commonH}=getCommonSize(patternAOrg, patternBOrg, changePatternSizeValue);
 
   if(!isVertical){
     totalRows=commonH;
@@ -352,6 +360,10 @@ const sizeCheck=(op_params:Array<OpParamVal>, op_inputs:Array<OpInput>):boolean=
   }else{
     totalRows=commonH+commonH+middleColumnCount;
     totalCols=commonW;
+  }
+
+  if(<number>getOpParamValById(3, op_params)===1){
+    isVertical=true;
   }
 
   return totalRows*totalCols<=defaults.max_area;
