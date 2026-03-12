@@ -100,7 +100,8 @@ export type CanvasParam = OperationParam & {
  */
 export type NumParam = OperationParam & {
   min: number,
-  max: number
+  max: number,
+  step?: number
 }
 
 
